@@ -12,7 +12,6 @@ license="BSD-3-Clause"
 homepage="https://age-encryption.org/"
 distfiles="https://github.com/FiloSottile/age/archive/v${version}.tar.gz"
 checksum=396007bc0bc53de253391493bda1252757ba63af1a19db86cfb60a35cb9d290a
-export GOFLAGS="${GOFLAGS}"
 
 post_install() {
 	vlicense LICENSE
