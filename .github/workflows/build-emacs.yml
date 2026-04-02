@@ -1,4 +1,4 @@
-name: Build Emacs aarch64
+name: BUILD EMACS AARCH64
 
 on:
   push:
@@ -75,7 +75,7 @@ jobs:
           xbps-rindex -S --privkey <(printf '%s' "${{ secrets.PRIV_KEY }}") *.xbps
           xbps-rindex -c $PWD
 
-       - name: CHECKSUM
+      - name: CHECKSUM
         working-directory: void-packages/hostdir/binpkgs/final_repo/
         run: |
           sha256sum $(echo *.xbps)
