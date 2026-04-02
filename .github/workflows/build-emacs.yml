@@ -1,0 +1,60 @@
+name: Build Emacs aarch64
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - { host: x86_64, target: aarch64 }
+          - { host: x86_64-musl, target: aarch64-musl }
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Free Disk Space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/
+          sudo docker image prune --all --force
+
+      - name: Checkout your fork
+        uses: actions/checkout@v4
+        with:
+          path: void-packages
+
+      - name: Prepare xbps-static
+        run: |
+          mkdir -p /opt/xbps
+          curl -LO http://repo-default.voidlinux.org/static/xbps-static-latest.x86_64-musl.tar.xz
+          tar xvf xbps-static-latest.x86_64-musl.tar.xz -C /opt/xbps
+          echo "/opt/xbps/usr/bin" >> $GITHUB_PATH
+
+      - name: Build Emacs
+        env:
+          XBPS_ALLOW_RESTRICTED: "yes"
+        working-directory: void-packages
+        run: |
+          ./xbps-src -a ${{ matrix.target }} -A ${{ matrix.host }} binary-bootstrap
+          ./xbps-src -a ${{ matrix.target }} -A ${{ matrix.host }} pkg emacs
+
+      - name: Sign Repository
+        env:
+          XBPS_PASSPHRASE: ${{ secrets.SIGN_PASS }}
+        working-directory: void-packages/hostdir/binpkgs
+        run: |
+          mkdir -p final_repo
+          cp */*.xbps final_repo/
+          cd final_repo
+          xbps-rindex -a *.xbps
+          xbps-rindex -s --signedby "${{ vars.SIGNEDBY }}" --privkey <(printf '%s' "${{ secrets.PRIV_KEY }}") .
+          xbps-rindex -S --privkey <(printf '%s' "${{ secrets.PRIV_KEY }}") *.xbps
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: emacs-aarch64-${{ github.sha }}
+          files: |
+            void-packages/hostdir/binpkgs/final_repo/*
