@@ -9,11 +9,12 @@ on:
 jobs:
   build:
     strategy:
+      max-parallel: 4
       matrix:
         include:
           - { host: x86_64, target: aarch64 }
           - { host: x86_64-musl, target: aarch64-musl }
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - name: FREE DISK SPACE
@@ -68,9 +69,17 @@ jobs:
           mkdir -p final_repo
           cp */*.xbps final_repo/
           cd final_repo
-          xbps-rindex -a *.xbps
+          #xbps-rindex -a *.xbps
+          xbps-rindex -r $PWD
           xbps-rindex -s --signedby "${{ vars.SIGNEDBY }}" --privkey <(printf '%s' "${{ secrets.PRIV_KEY }}") .
           xbps-rindex -S --privkey <(printf '%s' "${{ secrets.PRIV_KEY }}") *.xbps
+          xbps-rindex -c $PWD
+
+       - name: CHECKSUM
+        working-directory: void-packages/hostdir/binpkgs/final_repo/
+        run: |
+          sha256sum $(echo *.xbps)
+          sha512sum $(echo *.xbps)
 
       - name: RELEASE
         uses: softprops/action-gh-release@v2
