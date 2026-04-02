@@ -45,6 +45,11 @@ jobs:
           tar xvf xbps-static-latest.x86_64-musl.tar.xz -C /opt/xbps
           rm xbps-static-latest.x86_64-musl.tar.xz
 
+      - name: SETUP QEMU FOR CROSS COMPILATION
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu-user-static binfmt-support
+
       - name: BUILD EMACS
         env:
           XBPS_TARGET_ARCH: ${{ matrix.target }}
