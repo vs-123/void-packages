@@ -54,10 +54,10 @@ jobs:
           ls
           if [[ "${{ matrix.host }}" == "${{ matrix.target }}" ]]; then
             ./xbps-src -A ${{ matrix.host }} binary-bootstrap
-            ./xbps-src pkg -j4 -A ${{ matrix.host }} ~nativecomp emacs
+            ./xbps-src -o "~nativecomp" -j4 -A ${{ matrix.host }} pkg emacs
           else
             ./xbps-src -a ${{ matrix.target }} -A ${{ matrix.host }} binary-bootstrap
-            ./xbps-src pkg -j4 -a ${{ matrix.target }} -A ${{ matrix.host }} ~nativecomp emacs
+            ./xbps-src -o "~nativecomp" -j4 -a ${{ matrix.target }} -A ${{ matrix.host }} pkg emacs
           fi
 
       - name: SIGN
