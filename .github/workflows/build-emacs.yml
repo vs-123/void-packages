@@ -12,8 +12,8 @@ jobs:
       max-parallel: 4
       matrix:
         include:
-          - { host: x86_64, target: aarch64 }
-          - { host: x86_64-musl, target: aarch64-musl }
+          - { host: aarch64, target: aarch64 }
+          - { host: aarch64-musl, target: aarch64-musl }
     runs-on: ubuntu-22.04
 
     steps:
@@ -45,10 +45,11 @@ jobs:
           tar xvf xbps-static-latest.x86_64-musl.tar.xz -C /opt/xbps
           rm xbps-static-latest.x86_64-musl.tar.xz
 
-      - name: SETUP QEMU FOR CROSS COMPILATION
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y qemu-user-static binfmt-support
+#      - name: SETUP QEMU FOR CROSS COMPILATION
+#        run: |
+#          sudo apt-get update
+#          sudo apt-get install -y qemu-user-static binfmt-support
+#          echo "QEMU_LD_PREFIX=/home/runner/work/void-packages/void-packages/masterdir-x86_64/usr/aarch64-linux-gnu" >> $GITHUB_ENV
 
       - name: BUILD EMACS
         env:
