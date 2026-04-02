@@ -2,7 +2,8 @@ name: Build Emacs aarch64
 
 on:
   push:
-    branches: [ main ]
+    tags:
+      - '*'
   workflow_dispatch:
 
 jobs:
@@ -15,34 +16,53 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Free Disk Space
+      - name: FREE DISK SPACE
         run: |
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/share/swift
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/.ghcup
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          sudo rm -rf /opt/hostedtoolcache/
+          sudo rm -rf /usr/local/graalvm/
+          sudo rm -rf /usr/local/share/powershell
+          sudo rm -rf /usr/local/share/chromium
+          sudo rm -rf /usr/local/lib/node_modules
           sudo docker image prune --all --force
 
-      - name: Checkout your fork
+      - name: CHECKOUT FORK
         uses: actions/checkout@v4
         with:
           path: void-packages
 
-      - name: Prepare xbps-static
+      - name: PREPARE XBPS-STATIC
         run: |
           mkdir -p /opt/xbps
           curl -LO http://repo-default.voidlinux.org/static/xbps-static-latest.x86_64-musl.tar.xz
           tar xvf xbps-static-latest.x86_64-musl.tar.xz -C /opt/xbps
-          echo "/opt/xbps/usr/bin" >> $GITHUB_PATH
+          rm xbps-static-latest.x86_64-musl.tar.xz
 
-      - name: Build Emacs
+      - name: BUILD EMACS
         env:
-          XBPS_ALLOW_RESTRICTED: "yes"
+          XBPS_TARGET_ARCH: ${{ matrix.target }}
         working-directory: void-packages
         run: |
-          ./xbps-src -a ${{ matrix.target }} -A ${{ matrix.host }} binary-bootstrap
-          ./xbps-src -a ${{ matrix.target }} -A ${{ matrix.host }} pkg emacs
+          export PATH="/opt/xbps/usr/bin/:$PATH"
+          cd void-packages
+          if [[ "${{ matrix.host }}" == "${{ matrix.target }}" ]]; then
+            ./xbps-src -A ${{ matrix.host }} binary-bootstrap
+            ./xbps-src pkg -j4 -A ${{ matrix.host }} emacs
+          else
+            ./xbps-src -a ${{ matrix.target }} -A ${{ matrix.host }} binary-bootstrap
+            ./xbps-src pkg -j4 -a ${{ matrix.target }} -A ${{ matrix.host }} emacs
+          fi
 
-      - name: Sign Repository
+      - name: SIGN
         env:
           XBPS_PASSPHRASE: ${{ secrets.SIGN_PASS }}
+          XBPS_TARGET_ARCH: ${{ secrets.target }}
         working-directory: void-packages/hostdir/binpkgs
         run: |
           mkdir -p final_repo
@@ -52,7 +72,7 @@ jobs:
           xbps-rindex -s --signedby "${{ vars.SIGNEDBY }}" --privkey <(printf '%s' "${{ secrets.PRIV_KEY }}") .
           xbps-rindex -S --privkey <(printf '%s' "${{ secrets.PRIV_KEY }}") *.xbps
 
-      - name: Release
+      - name: RELEASE
         uses: softprops/action-gh-release@v2
         with:
           tag_name: emacs-aarch64-${{ github.sha }}
