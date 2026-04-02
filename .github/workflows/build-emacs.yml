@@ -50,7 +50,7 @@ jobs:
         working-directory: void-packages
         run: |
           export PATH="/opt/xbps/usr/bin/:$PATH"
-          cd void-packages
+          ls
           if [[ "${{ matrix.host }}" == "${{ matrix.target }}" ]]; then
             ./xbps-src -A ${{ matrix.host }} binary-bootstrap
             ./xbps-src pkg -j4 -A ${{ matrix.host }} emacs
