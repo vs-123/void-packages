@@ -10,7 +10,7 @@ configure_args="--with-file-notification=inotify --with-modules
  $(vopt_with xml xml2) $(vopt_with gnutls) $(vopt_with sound) $(vopt_with m17n m17n-flt)
  $(vopt_with harfbuzz) $(vopt_with cairo) $(vopt_with gmp libgmp)
  $(vopt_with sqlite sqlite3) $(vopt_with treesitter tree-sitter)
- $(vopt_with nativecomp native-compilation=aot)"
+ --with-native-compilation=$(vopt_if nativecomp aot no)"
 hostmakedepends="pkg-config tar texinfo"
 makedepends="ncurses-devel libXaw-devel libXi-devel gtk+3-devel
  dbus-devel acl-devel
